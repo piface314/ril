@@ -312,7 +312,7 @@ inline_doc! {
     pub use sequence::{DisposalMethod, Frame, ImageSequence, LoopCount};
     #[cfg(feature = "text")]
     pub use text::{
-        Font, HorizontalAnchor, TextAlign, TextLayout, TextSegment, VerticalAnchor, WrapStyle,
+        Font, HorizontalAnchor, TextLayout, TextSegment, VerticalAnchor, WrapStyle,
     };
 }
 
@@ -345,7 +345,5 @@ pub mod prelude {
         RadialGradient, RadialGradientCover,
     };
     #[cfg(feature = "text")]
-    pub use super::{
-        Font, HorizontalAnchor, TextAlign, TextLayout, TextSegment, VerticalAnchor, WrapStyle,
-    };
+    pub use super::{Font, HorizontalAnchor, TextLayout, TextSegment, VerticalAnchor, WrapStyle};
 }

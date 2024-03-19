@@ -69,7 +69,7 @@ pub fn bench_invert_gif(c: &mut Criterion) {
                 let mut data = image
                     .data
                     .iter()
-                    .flat_map(|p| (!*p).as_bytes())
+                    .flat_map(|p| (Rgba {r: !p.r, g: !p.g, b: !p.b, a: p.a }).as_bytes())
                     .collect::<Vec<_>>();
 
                 let frame =

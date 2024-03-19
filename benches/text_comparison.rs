@@ -16,7 +16,8 @@ pub fn bench_text_rendering(c: &mut Criterion) {
         let font = Font::from_bytes(bytes, 20.0).unwrap();
 
         b.iter(|| {
-            TextSegment::new(&font, sample, Rgba::new(0, 0, 0, 255))
+            TextLayout::new()
+                .with_text(&TextSegment::new(&font, sample, Rgba::new(0, 0, 0, 255)))
                 .with_position(5, 5)
                 .draw(&mut image);
         })

@@ -10,12 +10,11 @@ fn test_text_rendering() -> ril::Result<()> {
         .with_wrap(WrapStyle::Word)
         .with_width(image.width())
         .with_position(cx, cy)
-        .with_basic_text(&font, include_str!("sample_text.txt"), Rgba::white())
-        .with_align(TextAlign::Center)
-        .centered();
+        .centered()
+        .with_basic_text(&font, include_str!("sample_text.txt"), Rgba::white());
 
     let bounds = layout.bounding_box();
-    assert_eq!(bounds, (4, 24, 507, 999));
+    assert_eq!(bounds, (2, 49, 510, 974));
 
     image.draw(&layout);
     image.save_inferred("tests/out/text_render_output.png")
@@ -31,8 +30,8 @@ fn test_text_gradient() -> ril::Result<()> {
         .with_wrap(WrapStyle::Word)
         .with_width(mask.width())
         .with_position(cx, cy)
-        .with_basic_text(&font, "gradient", Rgba::white())
-        .centered();
+        .centered()
+        .with_basic_text(&font, "gradient", Rgba::white());
 
     mask.draw(&layout);
 
