@@ -10,7 +10,7 @@ use std::{
     borrow::Cow,
     fmt::{self, Debug, Formatter},
     hash::Hash,
-    ops::Not,
+    ops::{Mul, Not},
 };
 
 mod sealed {
@@ -40,7 +40,17 @@ pub use sealed::MaybeSealed;
 ///
 /// Generally speaking, the values enclosed inside of each pixel are designed to be immutable.
 pub trait Pixel:
-    Copy + Clone + Debug + Default + PartialEq + Eq + Hash + Not<Output = Self> + MaybeSealed
+    Copy
+    + Clone
+    + Debug
+    + Default
+    + PartialEq
+    + Eq
+    + Hash
+    + Not<Output = Self>
+    + MaybeSealed
+    + Mul<Self, Output = Self>
+    + Mul<f32, Output = Self>
 {
     /// The color type of the pixel.
     const COLOR_TYPE: ColorType;
@@ -164,6 +174,14 @@ pub trait Pixel:
     #[must_use]
     fn merge_with_alpha(self, other: Self, alpha: u8) -> Self;
 
+    /// Returns the maximum subpixel values between the two pixels.
+    #[must_use]
+    fn max(self, other: Self) -> Self;
+
+    /// Returns the maximum subpixel values between the two pixels.
+    #[must_use]
+    fn min(self, other: Self) -> Self;
+
     /// Overlays this pixel with the given overlay pixel, abiding by the given overlay mode with
     /// the given alpha.
     ///
@@ -283,6 +301,14 @@ impl Pixel for NoOp {
     fn as_rgba(&self) -> Rgba {
         panic!("NoOp is a private pixel type and should not be used")
     }
+
+    fn max(self, _other: Self) -> Self {
+        self
+    }
+
+    fn min(self, _other: Self) -> Self {
+        self
+    }
 }
 
 impl Not for NoOp {
@@ -290,6 +316,20 @@ impl Not for NoOp {
 
     fn not(self) -> Self::Output {
         Self
+    }
+}
+
+impl Mul<f32> for NoOp {
+    type Output = Self;
+    fn mul(self, _rhs: f32) -> Self::Output {
+        self
+    }
+}
+
+impl Mul<NoOp> for NoOp {
+    type Output = Self;
+    fn mul(self, _rhs: NoOp) -> Self::Output {
+        self
     }
 }
 
@@ -438,6 +478,14 @@ impl Pixel for BitPixel {
         }
     }
 
+    fn max(self, other: Self) -> Self {
+        Self(self.0.max(other.0))
+    }
+
+    fn min(self, other: Self) -> Self {
+        Self(self.0.min(other.0))
+    }
+
     force_into_impl!();
 }
 
@@ -446,6 +494,20 @@ impl Not for BitPixel {
 
     fn not(self) -> Self::Output {
         Self(!self.0)
+    }
+}
+
+impl Mul<f32> for BitPixel {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self(if self.0 {rhs > 0.0} else {false})
+    }
+}
+
+impl Mul<BitPixel> for BitPixel {
+    type Output = Self;
+    fn mul(self, rhs: BitPixel) -> Self::Output {
+        Self(self.0 && rhs.0)
     }
 }
 
@@ -595,6 +657,14 @@ impl Pixel for L {
         }
     }
 
+    fn max(self, other: Self) -> Self {
+        Self(self.0.max(other.0))
+    }
+
+    fn min(self, other: Self) -> Self {
+        Self(self.0.min(other.0))
+    }
+
     force_into_impl!();
 }
 
@@ -603,6 +673,20 @@ impl Not for L {
 
     fn not(self) -> Self::Output {
         Self(!self.0)
+    }
+}
+
+impl Mul<f32> for L {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self((self.0 as f32 * rhs).clamp(0.0, u8::MAX as f32) as u8)
+    }
+}
+
+impl Mul<L> for L {
+    type Output = Self;
+    fn mul(self, rhs: L) -> Self::Output {
+        Self((self.0 as f32 * rhs.0 as f32 / u8::MAX as f32) as u8)
     }
 }
 
@@ -708,6 +792,22 @@ impl Pixel for Rgb {
         }
     }
 
+    fn max(self, other: Self) -> Self {
+        Self {
+            r: self.r.max(other.r),
+            g: self.g.max(other.g),
+            b: self.b.max(other.b),
+        }
+    }
+
+    fn min(self, other: Self) -> Self {
+        Self {
+            r: self.r.min(other.r),
+            g: self.g.min(other.g),
+            b: self.b.min(other.b),
+        }
+    }
+
     force_into_impl!();
 }
 
@@ -721,6 +821,30 @@ impl Not for Rgb {
         //   * this function is intended to simply invert all 24 bits of the pixel,
         //     which is exactly what this does
         unsafe { *(&(!*(&(self, 0u8) as *const _ as *const u32)) as *const _ as *const Self) }
+    }
+}
+
+impl Mul<f32> for Rgb {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        let max = u8::MAX as f32;
+        Self {
+            r: ((self.r as f32 * rhs).clamp(0.0, max)) as u8,
+            g: ((self.g as f32 * rhs).clamp(0.0, max)) as u8,
+            b: ((self.b as f32 * rhs).clamp(0.0, max)) as u8,
+        }
+    }
+}
+
+impl Mul<Rgb> for Rgb {
+    type Output = Self;
+    fn mul(self, rhs: Rgb) -> Self::Output {
+        let max = u8::MAX as f32;
+        Self {
+            r: ((self.r as f32 * rhs.r as f32 / max)) as u8,
+            g: ((self.g as f32 * rhs.g as f32 / max)) as u8,
+            b: ((self.b as f32 * rhs.b as f32 / max)) as u8,
+        }
     }
 }
 
@@ -947,6 +1071,24 @@ impl Pixel for Rgba {
         }
     }
 
+    fn max(self, other: Self) -> Self {
+        Self {
+            r: self.r.max(other.r),
+            g: self.g.max(other.g),
+            b: self.b.max(other.b),
+            a: self.a.max(other.a),
+        }
+    }
+
+    fn min(self, other: Self) -> Self {
+        Self {
+            r: self.r.min(other.r),
+            g: self.g.min(other.g),
+            b: self.b.min(other.b),
+            a: self.a.min(other.a),
+        }
+    }
+
     force_into_impl!();
 }
 
@@ -1046,6 +1188,32 @@ impl Not for Rgba {
             g: !self.g,
             b: !self.b,
             a: !self.a,
+        }
+    }
+}
+
+impl Mul<f32> for Rgba {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        let max = u8::MAX as f32;
+        Self {
+            r: ((self.r as f32 * rhs).clamp(0.0, max)) as u8,
+            g: ((self.g as f32 * rhs).clamp(0.0, max)) as u8,
+            b: ((self.b as f32 * rhs).clamp(0.0, max)) as u8,
+            a: ((self.a as f32 * rhs).clamp(0.0, max)) as u8,
+        }
+    }
+}
+
+impl Mul<Rgba> for Rgba {
+    type Output = Self;
+    fn mul(self, rhs: Rgba) -> Self::Output {
+        let max = u8::MAX as f32;
+        Self {
+            r: ((self.r as f32 * rhs.r as f32 / max)) as u8,
+            g: ((self.g as f32 * rhs.g as f32 / max)) as u8,
+            b: ((self.b as f32 * rhs.b as f32 / max)) as u8,
+            a: ((self.a as f32 * rhs.a as f32 / max)) as u8,
         }
     }
 }
@@ -1314,6 +1482,26 @@ impl Pixel for Dynamic {
         dynamic
     }
 
+    fn max(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::BitPixel(pixel), Self::BitPixel(other)) => Self::BitPixel(pixel.max(other)),
+            (Self::L(pixel), Self::L(other)) => Self::L(pixel.max(other)),
+            (Self::Rgb(pixel), Self::Rgb(other)) => Self::Rgb(pixel.max(other)),
+            (Self::Rgba(pixel), Self::Rgba(other)) => Self::Rgba(pixel.max(other)),
+            _ => panic!("Cannot get maximum of two foreign pixel types"),
+        }
+    }
+
+    fn min(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::BitPixel(pixel), Self::BitPixel(other)) => Self::BitPixel(pixel.min(other)),
+            (Self::L(pixel), Self::L(other)) => Self::L(pixel.min(other)),
+            (Self::Rgb(pixel), Self::Rgb(other)) => Self::Rgb(pixel.min(other)),
+            (Self::Rgba(pixel), Self::Rgba(other)) => Self::Rgba(pixel.min(other)),
+            _ => panic!("Cannot get maximum of two foreign pixel types"),
+        }
+    }
+
     force_into_impl!();
 }
 
@@ -1326,6 +1514,31 @@ impl Not for Dynamic {
             Self::L(pixel) => Self::L(!pixel),
             Self::Rgb(pixel) => Self::Rgb(!pixel),
             Self::Rgba(pixel) => Self::Rgba(!pixel),
+        }
+    }
+}
+
+impl Mul<f32> for Dynamic {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        match self {
+            Self::BitPixel(pixel) => Self::BitPixel(pixel * rhs),
+            Self::L(pixel) => Self::L(pixel * rhs),
+            Self::Rgb(pixel) => Self::Rgb(pixel * rhs),
+            Self::Rgba(pixel) => Self::Rgba(pixel * rhs),
+        }
+    }
+}
+
+impl Mul<Dynamic> for Dynamic {
+    type Output = Self;
+    fn mul(self, rhs: Dynamic) -> Self::Output {
+        match (self, rhs) {
+            (Self::BitPixel(lhs), Self::BitPixel(rhs)) => Self::BitPixel(lhs * rhs),
+            (Self::L(lhs), Self::L(rhs)) => Self::L(lhs * rhs),
+            (Self::Rgb(lhs), Self::Rgb(rhs)) => Self::Rgb(lhs * rhs),
+            (Self::Rgba(lhs), Self::Rgba(rhs)) => Self::Rgba(lhs * rhs),
+            _ => panic!("mismatched pixel types")
         }
     }
 }
@@ -1717,6 +1930,14 @@ macro_rules! impl_palette8 {
                 todo!("implement dynamic palettes")
             }
 
+            fn max(self, _other: Self) -> Self {
+                todo!("implement max for palettes")
+            }
+
+            fn min(self, _other: Self) -> Self {
+                todo!("implement min for palettes")
+            }
+
             force_into_impl!();
         }
 
@@ -1744,6 +1965,20 @@ macro_rules! impl_palette8 {
                 let target = &!self.color();
 
                 try_palette!(self, "inverted", |color| color == target)
+            }
+        }
+
+        impl<'p> Mul<f32> for $name<'p> {
+            type Output = Self;
+            fn mul(self, _rhs: f32) -> Self::Output {
+                todo!("implement multiplication for palettes")
+            }
+        }
+        
+        impl<'p> Mul<$name<'p>> for $name<'p> {
+            type Output = Self;
+            fn mul(self, _rhs: $name<'p>) -> Self::Output {
+                todo!("implement multiplication for palettes")
             }
         }
 
