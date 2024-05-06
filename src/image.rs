@@ -1015,10 +1015,8 @@ impl<P: Pixel> Image<P> {
     ///
     /// # See Also
     /// - [`Self::rotated`] for this method which does operate in-place - useful for method chaining
-    pub fn rotate(&mut self, mut degrees: i32) {
-        degrees %= 360;
-
-        match degrees {
+    pub fn rotate(&mut self, degrees: i32) {
+        match degrees.rem_euclid(360) {
             0 => (),
             90 => self.rotate_90(),
             180 => self.rotate_180(),
