@@ -1036,6 +1036,15 @@ impl<P: Pixel> Image<P> {
         self
     }
 
+    /// Takes the image and creates a new one with the specified padding and fill.
+    #[must_use]
+    pub fn padded(self, fill: P, top: u32, right: u32, bottom: u32, left: u32) -> Self {
+        let (w, h) = self.dimensions();
+        Self::from_fn(w + left + right, h + top + bottom, |x, y| {
+            self.get_pixel(x - left, y - top).copied().unwrap_or(fill)
+        })
+    }
+
     /// Resizes this image in place to the given dimensions using the given resizing algorithm
     /// in place.
     ///

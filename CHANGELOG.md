@@ -11,6 +11,7 @@ Versions prior to v0.7 are not tagged/released on GitHub.
 - Change `Paste` to allow negative position values
 - Change default `OverlayMode` to `OverlayMode::merge`
 - Add `Image::underlay_pixel` method
+- Add `Image::padded` method to add padding/border to images
 
 ### Bug fixes
 - Fix text alignment rendering duplicately ([#28](https://github.com/jay3332/ril/issues/28))
