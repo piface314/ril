@@ -1430,6 +1430,22 @@ impl Image<Rgba> {
             a: f(L(a)).value(),
         })
     }
+
+    /// Creates a stroke around this image. This is a shorthand for using the
+    /// [`Self::draw`] method with [`crate::morph::Stroke`].
+    pub fn stroke(&mut self, size: u32, color: Rgba, threshold: u8) {
+        let src = self.clone();
+        self.draw(&crate::morph::Stroke::new(&src, size, color).with_threshold(threshold));
+    }
+
+    /// Adds padding to this image with enough space to fit
+    /// the stroke, and adds stroke to it.
+    #[must_use]
+    pub fn padded_stroke(self, size: u32, color: Rgba, threshold: u8) -> Self {
+        let mut out = self.padded(Rgba::transparent(), size, size, size, size);
+        out.stroke(size, color, threshold);
+        out
+    }
 }
 
 impl<'a> From<Image<PalettedRgb<'a>>> for Image<PalettedRgba<'a>> {

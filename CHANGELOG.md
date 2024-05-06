@@ -14,6 +14,7 @@ Versions prior to v0.7 are not tagged/released on GitHub.
 - Add `Image::padded` method to add padding/border to images
 - Add `Banded::band` method to extract an individual image band
 - Add `min`, `max` and `mul` operations to `Pixel` types
+- Add `morph` module with `Dilation`, `Erosion` and `Stroke` features
 
 ### Bug fixes
 - Fix text alignment rendering duplicately ([#28](https://github.com/jay3332/ril/issues/28))

@@ -270,6 +270,7 @@ mod format;
 #[cfg(feature = "gradient")]
 pub mod gradient;
 mod image;
+pub mod morph;
 pub mod pixel;
 pub mod quantize;
 #[cfg(feature = "resize")]
