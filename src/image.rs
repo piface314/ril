@@ -1488,6 +1488,9 @@ pub trait Banded<T> {
     /// Takes this image and returns its bands.
     fn bands(&self) -> T;
 
+    /// Takes this image and returns one specific band.
+    fn band(&self, idx: usize) -> Band;
+
     /// Creates a new image from the given bands.
     fn from_bands(bands: T) -> Self;
 }
@@ -1537,6 +1540,10 @@ impl Banded<(Band, Band, Band)> for Image<Rgb> {
         extract_bands!(self; 0 1 2)
     }
 
+    fn band(&self, idx: usize) -> Band {
+        map_idx!(self, idx)
+    }
+
     fn from_bands((r, g, b): (Band, Band, Band)) -> Self {
         validate_dimensions!(r, g, b);
 
@@ -1553,6 +1560,10 @@ impl Banded<(Band, Band, Band)> for Image<Rgb> {
 impl Banded<(Band, Band, Band, Band)> for Image<Rgba> {
     fn bands(&self) -> (Band, Band, Band, Band) {
         extract_bands!(self; 0 1 2 3)
+    }
+
+    fn band(&self, idx: usize) -> Band {
+        map_idx!(self, idx)
     }
 
     fn from_bands((r, g, b, a): (Band, Band, Band, Band)) -> Self {
