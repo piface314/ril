@@ -23,16 +23,16 @@ use std::{
 /// The behavior to use when overlaying images on top of each other.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum OverlayMode {
-    /// Replace alpha values with the alpha values of the overlay image. This is the default
-    /// behavior.
+    /// Replace alpha values with the alpha values of the overlay image.
     Replace,
     /// Merge the alpha values of overlay image with the alpha values of the base image.
+    /// This is the default behavior.
     Merge,
 }
 
 impl Default for OverlayMode {
     fn default() -> Self {
-        Self::Replace
+        Self::Merge
     }
 }
 
