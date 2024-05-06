@@ -572,8 +572,8 @@ impl<'a, P: Pixel> Draw<P> for TextLayout<'a, P> {
             for line in lines.iter() {
                 for glyph in &glyphs[line.glyph_start..=line.glyph_end] {
                     let font = glyph.font;
-                    let x = (glyph.x + ox) as i32;
-                    let y = (glyph.y + oy) as i32;
+                    let x = (glyph.x + ox) as i64;
+                    let y = (glyph.y + oy) as i64;
                     match glyph.user_data {
                         SpanData::Text(fill, overlay) => {
                             let (metrics, bitmap) = font.rasterize_config(glyph.key.unwrap());
@@ -605,11 +605,6 @@ impl<'a, P: Pixel> Draw<P> for TextLayout<'a, P> {
                             }
                         }
                         SpanData::InlineImg(other) => {
-                            let (x, y) = if x < 0 || y < 0 {
-                                continue;
-                            } else {
-                                (x as u32, y as u32)
-                            };
                             image.paste(x, y, other);
                         }
                     }
