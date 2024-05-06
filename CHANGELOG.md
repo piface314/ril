@@ -10,6 +10,7 @@ Versions prior to v0.7 are not tagged/released on GitHub.
 - Rewrite `text` module to include inline images and justification
 - Change `Paste` to allow negative position values
 - Change default `OverlayMode` to `OverlayMode::merge`
+- Add `Image::underlay_pixel` method
 
 ### Bug fixes
 - Fix text alignment rendering duplicately ([#28](https://github.com/jay3332/ril/issues/28))

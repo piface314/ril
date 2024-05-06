@@ -597,6 +597,19 @@ impl<P: Pixel> Image<P> {
         }
     }
 
+    /// Underlays the pixel at the given coordinates with the given pixel.
+    ///
+    /// If the pixel is out of bounds, nothing occurs: the method will fail silently.
+    /// This is expected, use [`Self::set_pixel`] if you want this to panic
+    #[inline]
+    pub fn underlay_pixel(&mut self, x: u32, y: u32, pixel: P) {
+        let pos = self.resolve_coordinate(x, y);
+
+        if let Some(target) = self.data.get_mut(pos) {
+            *target = pixel.overlay(*target, OverlayMode::Merge);
+        }
+    }
+
     /// Overlays the pixel at the given coordinates with the given alpha intensity. This does not
     /// regard the overlay mode, since this is usually used for anti-aliasing.
     ///
