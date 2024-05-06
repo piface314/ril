@@ -1388,7 +1388,7 @@ impl<F: IntoFill> Draw<F::Pixel> for Ellipse<F> {
 #[derive(Clone)]
 pub struct Paste<'img, 'mask, P: Pixel> {
     /// The position of the image to paste.
-    pub position: (u32, u32),
+    pub position: (i64, i64),
     /// A reference to the image to paste, or the foreground image.
     pub image: &'img Image<P>,
     /// A refrence to an image that masks or filters out pixels based on the values of its own
@@ -1418,7 +1418,7 @@ impl<'img, 'mask, P: Pixel> Paste<'img, 'mask, P> {
     /// Sets the position of where to paste the image at. The position is where the top-left corner
     /// of the image will be pasted.
     #[must_use]
-    pub const fn with_position(mut self, x: u32, y: u32) -> Self {
+    pub const fn with_position(mut self, x: i64, y: i64) -> Self {
         self.position = (x, y);
         self
     }
@@ -1475,18 +1475,22 @@ impl<'img, 'mask, P: Pixel> Draw<P> for Paste<'img, 'mask, P> {
         let mask = self.mask.as_ref();
 
         // These are exclusive bounds
-        let (x2, y2) = (x1 + w, y1 + h);
+        let (x2, y2) = (x1 + w as i64, y1 + h as i64);
 
         for (y, i) in (y1..y2).zip(0..) {
+            if y < 0 {
+                continue;
+            }
             for (x, j) in (x1..x2).zip(0..) {
-                if !mask
-                    .and_then(|mask| mask.get_pixel(j, i).map(BitPixel::value))
-                    .unwrap_or(true)
+                if x < 0
+                    || !mask
+                        .and_then(|mask| mask.get_pixel(j, i).map(BitPixel::value))
+                        .unwrap_or(true)
                 {
                     continue;
                 }
                 if let Some(pixel) = self.image.get_pixel(j, i) {
-                    image.overlay_pixel_with_mode(x, y, *pixel, overlay);
+                    image.overlay_pixel_with_mode(x as u32, y as u32, *pixel, overlay);
                 }
             }
         }

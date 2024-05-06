@@ -1127,7 +1127,7 @@ impl<P: Pixel> Image<P> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn paste(&mut self, x: u32, y: u32, image: &Self) {
+    pub fn paste(&mut self, x: i64, y: i64, image: &Self) {
         self.draw(&crate::Paste::new(image).with_position(x, y));
     }
 
@@ -1153,7 +1153,7 @@ impl<P: Pixel> Image<P> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn paste_with_mask(&mut self, x: u32, y: u32, image: &Self, mask: &Image<BitPixel>) {
+    pub fn paste_with_mask(&mut self, x: i64, y: i64, image: &Self, mask: &Image<BitPixel>) {
         self.draw(&crate::Paste::new(image).with_position(x, y).with_mask(mask));
     }
 
