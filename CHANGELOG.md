@@ -7,6 +7,7 @@ Versions prior to v0.7 are not tagged/released on GitHub.
 
 ## v0.11 (dev)
 - Add `PngEncoderOptions::new`
+- Rewrite `text` module to include inline images and text justification
 
 ### Bug fixes
 - Fix text alignment rendering duplicately ([#28](https://github.com/jay3332/ril/issues/28))
